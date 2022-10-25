@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Validator;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminante\Support\Facades\Auth;
-use App\Models\User;
-use Validator;
+use App\Http\Requests\RegisterRequest;
 
 class AuthController extends Controller
 {
@@ -29,6 +30,9 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+
+        $token = auth()->attempt($validator->validated());
+
         if (! $token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
@@ -39,20 +43,13 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $registerRequest)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|between:2,100',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:6',
-        ]);
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), 400);
-        }
         $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => bcrypt($request->password)]
+            $registerRequest->validated(),
+            ['password' => bcrypt($registerRequest->password)]
         ));
+
         return response()->json([
             'message' => 'User successfully registered',
             'user' => $user
