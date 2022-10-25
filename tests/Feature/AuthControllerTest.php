@@ -13,16 +13,6 @@ class AuthControllerTest extends TestCase
 
     CONST URL = "/api/auth";
 
-    public function testRegisterSuccesfuly()
-    {
-        $user = User::factory()->raw();
-        $response = Self::register($user);
-        $responseJson = $response->json();
-
-        $response->assertStatus(201);
-        $this->assertArrayHasKey('user', $responseJson);
-    }
-
     public function testLoginSuccesfuly()
     {
         $user = User::factory()->raw();
@@ -74,13 +64,11 @@ class AuthControllerTest extends TestCase
 
     private function register($userFactory)
     {
-        $user = array_merge($userFactory, ["password_confirmation" => $userFactory['password']]);
-
-        $url = Self::URL . "/register";
-
-        $response = $this->post($url, $user);
-
-        return $response;
+        $this->artisan('register:user --password=' . $userFactory['password'])
+            ->expectsQuestion('Please enter the first name', $userFactory['first_name'])
+            ->expectsQuestion('Please enter the surname', $userFactory['surname'])
+            ->expectsQuestion('Please enter a e-mail', $userFactory['email'])
+            ->expectsQuestion('Are you sure?', true);
     }
 
     private function login($user, $withoutPassword = false)

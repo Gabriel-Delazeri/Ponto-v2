@@ -38,25 +38,8 @@ class AuthController extends Controller
         }
         return $this->createNewToken($token);
     }
-     /**
-     * Register a User.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function register(RegisterRequest $registerRequest)
-    {
-        $user = User::create(array_merge(
-            $registerRequest->validated(),
-            ['password' => bcrypt($registerRequest->password)]
-        ));
 
-        return response()->json([
-            'message' => 'User successfully registered',
-            'user' => $user
-        ], 201);
-    }
-
-        /**
+    /**
      * Log the user out (Invalidate the token).
      *
      * @return \Illuminate\Http\JsonResponse
