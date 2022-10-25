@@ -5,71 +5,43 @@ namespace App\Http\Controllers;
 use Validator;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Services\AuthService;
+use App\Http\Requests\LoginRequest;
 use Illuminante\Support\Facades\Auth;
 use App\Http\Requests\RegisterRequest;
+use App\Providers\AuthServiceProvider;
 
 class AuthController extends Controller
 {
-    //
-    public function __construct()
+    protected $authService;
+    public function __construct(AuthService $authService)
     {
+        $this->authService = $authService;
         $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
-        /**
-     * Get a JWT via given credentials.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function login(Request $request)
+
+    public function login(LoginRequest $loginRequest)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:6'
-        ]);
+        $token = $this->authService->loginGetToken($loginRequest->validated());
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $token = auth()->attempt($validator->validated());
-
-        if (! $token = auth()->attempt($validator->validated())) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
         return $this->createNewToken($token);
     }
 
-    /**
-     * Log the user out (Invalidate the token).
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function logout() {
-        auth()->logout();
+        $this->authService->logout();
         return response()->json(['message' => 'User successfully signed out']);
     }
-    /**
-     * Refresh a token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
+
     public function refresh() {
-        return $this->createNewToken(auth()->refresh());
+        return $this->createNewToken($this->authService->getRefresh());
     }
 
-    /**
-     * Get the token array structure.
-     *
-     * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     protected function createNewToken($token){
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
-            'user' => auth()->user()
+            'expires_in' => $this->authService->getTimeToLive(),
+            'user' => $this->authService->getUser()
         ]);
     }
 }

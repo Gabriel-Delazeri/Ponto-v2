@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class RegisterRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,10 +26,8 @@ class RegisterRequest extends FormRequest
     public function rules()
     {
         return [
-            'first_name' => 'required|string|min:2|max:100',
-            'surname' => 'required|string|min:2|max:100',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:6',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
         ];
     }
 
@@ -39,7 +37,6 @@ class RegisterRequest extends FormRequest
             'required' => 'The field :attribute must have be filled',
             'string'   => 'The field :attribute must have be a string',
             'min'      => 'The field :attribute must have at least :min characters',
-            'max'      => 'The field :attribute must be at most :max characters',
             'email'    => 'The field :attribute must receive a valid email address',
         ];
     }
