@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SendWelcomeEmailJob;
 use App\Models\User;
 use Illuminate\Console\Command;
 
@@ -28,7 +29,7 @@ class RegisterUser extends Command
      */
     public function handle()
     {
-        $password = is_null($this->option('password')) ?
+        $passwordBeforeHash = is_null($this->option('password')) ?
                     self::generateStrongPassword(6, false, 'lud') :
                     $this->option('password');
 
@@ -43,17 +44,18 @@ class RegisterUser extends Command
         $this->line('First Name: '.$firstName);
         $this->line('Surname: '.$surname);
         $this->line('E-mail: '.$email);
-        $this->line('Password: '.$password);
+        $this->line('Password: '.$passwordBeforeHash);
 
         if ($this->confirm('Are you sure?', true)) {
-            User::create([
-                "first_name" => $firstName,
-                "surname" => $surname,
-                "email" => $email,
-                "password" => bcrypt($password)
+
+            $user = User::create([
+                'first_name' => $firstName,
+                'surname'    => $surname,
+                'email'      => $email,
+                'password'   => bcrypt($passwordBeforeHash)
             ]);
 
-            //send a email here.
+            SendWelcomeEmailJob::dispatch($user, $passwordBeforeHash);
 
             $this->info("User [$email] created successfully.");
         }
