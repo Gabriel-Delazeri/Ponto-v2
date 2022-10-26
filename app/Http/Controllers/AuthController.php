@@ -2,14 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Validator;
-use App\Models\User;
-use Illuminate\Http\Request;
 use App\Services\AuthService;
 use App\Http\Requests\LoginRequest;
-use Illuminante\Support\Facades\Auth;
-use App\Http\Requests\RegisterRequest;
-use App\Providers\AuthServiceProvider;
 
 class AuthController extends Controller
 {
@@ -24,7 +18,7 @@ class AuthController extends Controller
     {
         $token = $this->authService->loginGetToken($loginRequest->validated());
 
-        return $this->createNewToken($token);
+        return $this->responseAuthUser($token);
     }
 
     public function logout() {
@@ -33,10 +27,10 @@ class AuthController extends Controller
     }
 
     public function refresh() {
-        return $this->createNewToken($this->authService->getRefresh());
+        return $this->responseAuthUser($this->authService->getRefresh());
     }
 
-    protected function createNewToken($token){
+    protected function responseAuthUser($token){
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
